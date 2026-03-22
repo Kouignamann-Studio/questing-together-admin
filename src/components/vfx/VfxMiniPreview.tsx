@@ -45,7 +45,7 @@ const renderMiniLayer = (layer: VfxLayer, t: number) => {
     case 'ring':
       return <circle key={layer.id} cx={x} cy={y} r={layer.radius * scale * 0.5} fill="none" stroke={layer.color} strokeWidth={layer.thickness * scale * 0.5} opacity={alpha} />;
     case 'trail': {
-      const segs: JSX.Element[] = [];
+      const segs: React.ReactElement[] = [];
       for (let i = 0; i < Math.min(layer.segments, 5); i++) {
         const sa = alpha * (1 - (i / Math.max(1, layer.segments - 1)) * layer.falloff * 10);
         if (sa > 0) {

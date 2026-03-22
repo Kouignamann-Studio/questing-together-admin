@@ -177,7 +177,7 @@ const LayerInspector = ({ layer, onChange }: LayerInspectorProps) => {
             <Stack key={trackName} className="gap-1">
               <CurveEditor
                 trackName={trackName}
-                keyframes={keyframes}
+                keyframes={keyframes ?? []}
                 onChange={(kfs) => updateTrack(trackName, kfs)}
                 color={TRACK_COLORS[trackName] ?? '#aaa'}
               />

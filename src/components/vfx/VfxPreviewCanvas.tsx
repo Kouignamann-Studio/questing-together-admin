@@ -82,7 +82,7 @@ const renderLayerSvg = (layer: VfxLayer & { hidden?: boolean }, t: number) => {
       return <polygon key={layer.id} points={pts.join(' ')} fill={layer.color} opacity={alpha} />;
     }
     case 'trail': {
-      const segs: JSX.Element[] = [];
+      const segs: React.ReactElement[] = [];
       for (let i = 0; i < layer.segments; i++) {
         const segT = i / Math.max(1, layer.segments - 1);
         const segAlpha = alpha * (1 - segT * layer.falloff * 10);
