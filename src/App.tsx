@@ -14,7 +14,7 @@ import VfxEditorPage from './pages/VfxEditorPage';
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename="/questing-together-admin">
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<DashboardPage />} />
