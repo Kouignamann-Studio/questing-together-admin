@@ -9,6 +9,7 @@ import EnemiesPage from './pages/EnemiesPage';
 import RiddlesPage from './pages/RiddlesPage';
 import RoomsPage from './pages/RoomsPage';
 import ShopPage from './pages/ShopPage';
+import VfxEditorPage from './pages/VfxEditorPage';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/combat" element={<CombatSettingsPage />} />
             <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/vfx" element={<VfxEditorPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
