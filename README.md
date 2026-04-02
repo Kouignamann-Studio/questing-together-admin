@@ -29,6 +29,14 @@ Opens at `http://localhost:5173`.
 - **Linting**: Biome
 - **Package manager**: Bun
 
+## VFX Tooling
+
+The `/vfx` page now wraps a standalone static VFX tool served from `public/vfx-editor/`.
+
+- The standalone editor is hosted by the admin app.
+- The actual game assets are read and updated by linking the game repo root through the browser's File System Access API.
+- Quick load, sprite import, and registry regeneration now target the linked game repo instead of files inside this admin repo.
+
 ## Adding shadcn Components
 
 ```bash
