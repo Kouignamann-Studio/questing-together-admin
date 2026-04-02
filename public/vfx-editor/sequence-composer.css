@@ -1,23 +1,36 @@
+@font-face {
+  font-family: "Geist Variable";
+  src: url("./fonts/geist-latin-wght-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
-  --bg-page: #0b0a0d;
-  --bg-panel: rgba(22, 14, 19, 0.94);
-  --bg-strong: rgba(14, 10, 13, 0.98);
-  --bg-control: rgba(15, 12, 16, 0.98);
-  --line-soft: rgba(255, 240, 220, 0.08);
-  --line-strong: rgba(223, 148, 92, 0.34);
-  --text-main: #f4e9d9;
-  --text-dim: rgba(244, 233, 217, 0.62);
-  --accent-warm: #df945c;
-  --accent-cool: #8fd7ff;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
+  --bg-page: #18181b;
+  --bg-panel: rgba(24, 24, 27, 0.94);
+  --bg-strong: rgba(24, 24, 27, 0.98);
+  --bg-control: rgba(39, 39, 42, 0.96);
+  --line-soft: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text-main: #fafafa;
+  --text-dim: rgba(250, 250, 250, 0.62);
+  --accent-warm: #f4f4f5;
+  --accent-cool: #e4e4e7;
+  --surface-soft: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-active: rgba(255, 255, 255, 0.09);
+  --primary-solid: #fafafa;
+  --primary-solid-foreground: #18181b;
+  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
   color-scheme: dark;
   font-family:
-    "Besley",
-    "Iowan Old Style",
-    "Palatino Linotype",
-    serif;
+    "Geist Variable",
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
 }
 
 * {
@@ -29,8 +42,8 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(circle at top, rgba(223, 148, 92, 0.08), transparent 22%),
-    linear-gradient(180deg, #0c0a0d 0%, var(--bg-page) 100%);
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 24%),
+    linear-gradient(180deg, #111113 0%, var(--bg-page) 100%);
   color: var(--text-main);
 }
 
@@ -118,12 +131,12 @@ select {
   min-height: 340px;
   height: 396px;
   padding: 16px;
-  border: 1px solid rgba(255, 240, 220, 0.08);
+  border: 1px solid var(--line-soft);
   border-radius: 16px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 30% 20%, rgba(223, 148, 92, 0.14), transparent 34%),
-    linear-gradient(180deg, #1a1215 0%, #0b0a0d 100%);
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.06), transparent 34%),
+    linear-gradient(180deg, #202024 0%, #141417 100%);
 }
 
 .viewer-stage-viewport-surface {
@@ -161,9 +174,9 @@ select {
   align-items: center;
   gap: 6px;
   padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
-  background: rgba(12, 10, 14, 0.7);
+  background: rgba(24, 24, 27, 0.78);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(14px);
 }
@@ -188,7 +201,7 @@ select {
   width: 96px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(244, 233, 217, 0.2);
+  background: rgba(255, 255, 255, 0.2);
   transform: translate(-50%, -50%);
 }
 
@@ -212,10 +225,10 @@ select {
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #e2a06b;
+  color: var(--text-dim);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -307,9 +320,9 @@ h3 {
   min-width: 30px;
   height: 30px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-soft);
   color: var(--text-main);
   cursor: pointer;
   transition:
@@ -327,13 +340,13 @@ h3 {
 .viewport-select:hover,
 .viewport-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(226, 160, 107, 0.24);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
 }
 
 .viewport-button.is-active {
-  border-color: rgba(226, 160, 107, 0.28);
-  background: rgba(215, 132, 79, 0.16);
+  border-color: var(--line-strong);
+  background: var(--surface-active);
 }
 
 .viewport-button:disabled {
@@ -353,7 +366,7 @@ h3 {
 .menu-action {
   border: 1px solid var(--line-soft);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-soft);
   color: var(--text-main);
   cursor: pointer;
   transition:
@@ -372,8 +385,9 @@ h3 {
 }
 
 .pill-button-primary {
-  background: linear-gradient(135deg, #db8d55, #b05a43);
+  background: var(--primary-solid);
   border-color: transparent;
+  color: var(--primary-solid-foreground);
 }
 
 .menu-shell {
@@ -433,13 +447,13 @@ h3 {
 
 .safe-area-block {
   position: absolute;
-  background: rgba(137, 209, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(2px);
 }
 
 .safe-area-guide {
   position: absolute;
-  border: 1px dashed rgba(137, 209, 255, 0.48);
+  border: 1px dashed rgba(255, 255, 255, 0.24);
   border-radius: 18px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
@@ -516,7 +530,7 @@ h3 {
 }
 
 .timeline-row.is-selected .timeline-row-label {
-  border-color: rgba(143, 215, 255, 0.42);
+  border-color: var(--line-strong);
 }
 
 .timeline-cue {
@@ -528,16 +542,16 @@ h3 {
   align-content: center;
   gap: 0;
   padding: 0 12px 0 8px;
-  border: 1px solid rgba(223, 148, 92, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(223, 148, 92, 0.24), rgba(143, 215, 255, 0.12));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
   color: var(--text-main);
   cursor: grab;
 }
 
 .timeline-cue.is-selected {
-  border-color: rgba(223, 148, 92, 0.74);
-  box-shadow: inset 0 0 0 1px rgba(223, 148, 92, 0.2);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .timeline-cue-title,
@@ -565,7 +579,7 @@ h3 {
   bottom: 2px;
   width: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.18);
   cursor: ew-resize;
 }
 
@@ -575,7 +589,7 @@ h3 {
   bottom: 0;
   width: 2px;
   margin-left: -1px;
-  background: rgba(143, 215, 255, 0.9);
+  background: rgba(250, 250, 250, 0.85);
   pointer-events: none;
   z-index: 2;
 }
