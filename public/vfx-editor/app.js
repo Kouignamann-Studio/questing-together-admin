@@ -1881,6 +1881,9 @@ function normalizeAsset(rawAsset) {
 
     if (nextLayer.type === 'sprite') {
       nextLayer.alignToMotionDirection = Boolean(nextLayer.alignToMotionDirection);
+      nextLayer.rotationDeg = Number.isFinite(Number(nextLayer.rotationDeg))
+        ? Number(nextLayer.rotationDeg)
+        : 0;
       nextLayer.spriteId =
         typeof nextLayer.spriteId === 'string' && hasSpriteDefinition(nextLayer.spriteId)
           ? nextLayer.spriteId
@@ -5135,6 +5138,7 @@ function renderSpriteLayer(asset, instance, layer, progress) {
   const y = base.y + sampleLayerTrack(asset, layer, 'y', progress, 0);
   const scale = sampleLayerTrack(asset, layer, 'scale', progress, 1);
   const alpha = sampleLayerTrack(asset, layer, 'alpha', progress, 1);
+  const rotationDeg = sampleResolvedLayerRotationDeg(asset, instance, layer, progress, 0);
 
   return renderSpriteNode(
     layer.spriteId,
@@ -5145,6 +5149,7 @@ function renderSpriteLayer(asset, instance, layer, progress) {
     Math.max(0, alpha),
     layer.tintColor,
     `sprite-layer-mask-${escapeHtml(layer.id)}`,
+    rotationDeg,
   );
 }
 
@@ -6512,6 +6517,13 @@ function renderLayerInspector() {
               <span class="field-label">Height</span>
               <input class="field-input" type="number" step="0.1" value="${layer.height}" data-layer-field="height" />
             </label>
+
+            <label class="field">
+              <span class="field-label">Rotation</span>
+              <input class="field-input" type="number" step="1" value="${layer.rotationDeg ?? 0}" data-layer-field="rotationDeg" />
+            </label>
+
+            ${renderAlignToDirectionField(layer)}
           </div>
         `
             : layer.type === 'streak' || layer.type === 'diamond'
@@ -7159,6 +7171,7 @@ function createLayer(type) {
       spriteId: getDefaultSpriteId(),
       width: 42,
       height: 42,
+      rotationDeg: 0,
       tintColor: '',
       tracks: {
         scale: [{ at: 0, value: 1 }],
@@ -7332,6 +7345,7 @@ function createConvertedLayer(sourceLayer, nextType) {
       sourceLayer.height ??
       (sourceLayer.radius ? sourceLayer.radius * 2 : undefined) ??
       converted.height;
+    converted.rotationDeg = sourceLayer.rotationDeg ?? converted.rotationDeg;
     return converted;
   }
 

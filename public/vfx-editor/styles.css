@@ -356,6 +356,7 @@ h3 {
   width: min(1120px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -375,11 +376,11 @@ h3 {
 
 .modal-body {
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .effect-collection-modal {
-  min-height: min(720px, calc(100vh - 48px));
+  height: min(720px, calc(100vh - 48px));
 }
 
 .effect-collection-shell,
@@ -410,6 +411,7 @@ h3 {
   gap: 14px;
   min-height: 0;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .effect-collection-list-panel,
