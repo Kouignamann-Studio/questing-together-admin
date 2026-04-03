@@ -49,6 +49,7 @@ const LAYER_TYPE_OPTIONS = [
 const TRAIL_STYLE_OPTIONS = [
   { value: 'fill', label: 'Filled Circles' },
   { value: 'ring', label: 'Outlined Circles' },
+  { value: 'stretchedSquare', label: 'Stretched Square' },
   { value: 'streak', label: 'Streaks' },
   { value: 'diamond', label: 'Diamonds' },
   { value: 'arc', label: 'Arcs' },
@@ -554,6 +555,18 @@ function mixColors(colorA, colorB, amount) {
   return amount < 0.5 ? colorA : colorB;
 }
 
+function multiplyColorAlpha(color, alphaMultiplier = 1) {
+  const parsed = parseColorToRgba(color);
+  if (!parsed) {
+    return color;
+  }
+
+  return rgbaToCssColor({
+    ...parsed,
+    alpha: parsed.alpha * clamp(alphaMultiplier, 0, 1),
+  });
+}
+
 function renderColorField({ label, value, field, datasetName, fallback = '#ffffff' }) {
   return `
     <label class="field">
@@ -695,7 +708,7 @@ function getTrailStyleCardLabel(style) {
     return 'trail';
   }
 
-  return `trail (${style})`;
+  return `trail (${getTrailStyleLabel(style)})`;
 }
 
 function normalizeParticleRenderer(renderer) {
@@ -787,6 +800,7 @@ function getParticleRendererForLayer(layer) {
     return {
       fill: 'orb',
       ring: 'ring',
+      stretchedSquare: 'streak',
       radialGradient: 'radialGradient',
       streak: 'streak',
       diamond: 'diamond',
@@ -816,6 +830,27 @@ function applyTrailStyleDefaults(layer) {
 
   if (style === 'ring') {
     layer.thickness = Number.isFinite(Number(layer.thickness)) ? Number(layer.thickness) : 2.5;
+  }
+
+  if (style === 'stretchedSquare') {
+    layer.trailLength = Number.isFinite(Number(layer.trailLength))
+      ? Math.max(0.01, Number(layer.trailLength))
+      : 0.22;
+    layer.startWidth = Number.isFinite(Number(layer.startWidth))
+      ? Math.max(0.5, Number(layer.startWidth))
+      : 28;
+    layer.endWidth = Number.isFinite(Number(layer.endWidth))
+      ? Math.max(0.5, Number(layer.endWidth))
+      : 8;
+    layer.startColor =
+      typeof layer.startColor === 'string' && layer.startColor.trim()
+        ? layer.startColor
+        : layer.color ?? 'rgba(255, 140, 60, 0.72)';
+    layer.endColor =
+      typeof layer.endColor === 'string' && layer.endColor.trim()
+        ? layer.endColor
+        : toTransparentColor(layer.startColor);
+    layer.color = layer.startColor;
   }
 
   if (style === 'sprite') {
@@ -875,6 +910,10 @@ function getLayerCardSwatchStyle(layer) {
     return href
       ? `background-color: rgba(143, 215, 255, 0.16); background-image: url('${escapeHtml(href)}'); background-size: cover; background-position: center;`
       : 'background: rgba(143, 215, 255, 0.22);';
+  }
+
+  if (layer.type === 'trail' && layer.style === 'stretchedSquare') {
+    return `background: linear-gradient(135deg, ${escapeHtml(layer.startColor ?? layer.color ?? '#ffffff')}, ${escapeHtml(layer.endColor ?? toTransparentColor(layer.startColor ?? layer.color ?? '#ffffff'))});`;
   }
 
   if (layer.type === 'shaderLayer') {
@@ -1955,9 +1994,18 @@ function normalizeAsset(rawAsset) {
       nextLayer.thickness = Number.isFinite(Number(nextLayer.thickness))
         ? Number(nextLayer.thickness)
         : undefined;
+      nextLayer.trailLength = Number.isFinite(Number(nextLayer.trailLength))
+        ? Number(nextLayer.trailLength)
+        : undefined;
       nextLayer.width = Number.isFinite(Number(nextLayer.width)) ? Number(nextLayer.width) : undefined;
       nextLayer.height = Number.isFinite(Number(nextLayer.height))
         ? Number(nextLayer.height)
+        : undefined;
+      nextLayer.startWidth = Number.isFinite(Number(nextLayer.startWidth))
+        ? Number(nextLayer.startWidth)
+        : undefined;
+      nextLayer.endWidth = Number.isFinite(Number(nextLayer.endWidth))
+        ? Number(nextLayer.endWidth)
         : undefined;
       nextLayer.rotationDeg = Number.isFinite(Number(nextLayer.rotationDeg))
         ? Number(nextLayer.rotationDeg)
@@ -1974,6 +2022,10 @@ function normalizeAsset(rawAsset) {
       nextLayer.points = Number.isFinite(Number(nextLayer.points))
         ? Math.max(3, Math.round(Number(nextLayer.points)))
         : undefined;
+      nextLayer.startColor =
+        typeof nextLayer.startColor === 'string' ? nextLayer.startColor : undefined;
+      nextLayer.endColor =
+        typeof nextLayer.endColor === 'string' ? nextLayer.endColor : undefined;
       nextLayer.tintColor =
         typeof nextLayer.tintColor === 'string' ? nextLayer.tintColor : undefined;
       applyTrailStyleDefaults(nextLayer);
@@ -5153,10 +5205,98 @@ function renderSpriteLayer(asset, instance, layer, progress) {
   );
 }
 
+function renderStretchedSquareTrail(asset, instance, layer, progress) {
+  const trailLength = clamp(Number(layer.trailLength) || 0.22, 0.01, 1);
+  const actualTrailLength = Math.min(progress, trailLength);
+  const startColor = layer.startColor ?? layer.color ?? '#ffffff';
+  const endColor = layer.endColor ?? toTransparentColor(startColor);
+  const startWidth = Math.max(0.5, Number(layer.startWidth) || 28);
+  const endWidth = Math.max(0.5, Number(layer.endWidth) || 8);
+
+  const samplePoint = (sampleProgress, amount) => {
+    const base = sampleMotionPosition(asset, instance, sampleProgress);
+    return {
+      progress: sampleProgress,
+      x: base.x + sampleLayerTrack(asset, layer, 'x', sampleProgress, 0),
+      y: base.y + sampleLayerTrack(asset, layer, 'y', sampleProgress, 0),
+      alpha: sampleLayerTrack(asset, layer, 'alpha', sampleProgress, 1),
+      width: Math.max(
+        0.5,
+        lerp(startWidth, endWidth, amount) * Math.max(0.1, sampleLayerTrack(asset, layer, 'scale', sampleProgress, 1)),
+      ),
+    };
+  };
+
+  if (actualTrailLength <= 0.001) {
+    const point = samplePoint(progress, 0);
+    const headingDeg = sampleMotionHeadingDeg(asset, instance, progress, 0);
+    return `
+      <rect
+        x="${point.x - point.width / 2}"
+        y="${point.y - point.width / 2}"
+        width="${point.width}"
+        height="${point.width}"
+        fill="${escapeHtml(multiplyColorAlpha(startColor, point.alpha))}"
+        transform="rotate(${headingDeg} ${point.x} ${point.y})"
+      ></rect>
+    `;
+  }
+
+  const sampleCount = Math.max(6, Math.round(8 + actualTrailLength * 28));
+  const points = Array.from({ length: sampleCount + 1 }, (_, index) => {
+    const amount = index / sampleCount;
+    return samplePoint(progress - actualTrailLength * amount, amount);
+  });
+
+  return points
+    .slice(0, -1)
+    .map((head, index) => {
+      const tail = points[index + 1];
+      let dx = tail.x - head.x;
+      let dy = tail.y - head.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance > 0.001) {
+        dx /= distance;
+        dy /= distance;
+      } else {
+        const angle = (sampleMotionHeadingDeg(asset, instance, head.progress, 0) * Math.PI) / 180;
+        dx = Math.cos(angle);
+        dy = Math.sin(angle);
+      }
+
+      const normalX = -dy;
+      const normalY = dx;
+      const headHalfWidth = head.width / 2;
+      const tailHalfWidth = tail.width / 2;
+      const fill = multiplyColorAlpha(
+        mixColors(startColor, endColor, (index + 0.5) / sampleCount),
+        (head.alpha + tail.alpha) / 2,
+      );
+
+      return `
+        <polygon
+          points="
+            ${head.x + normalX * headHalfWidth},${head.y + normalY * headHalfWidth}
+            ${head.x - normalX * headHalfWidth},${head.y - normalY * headHalfWidth}
+            ${tail.x - normalX * tailHalfWidth},${tail.y - normalY * tailHalfWidth}
+            ${tail.x + normalX * tailHalfWidth},${tail.y + normalY * tailHalfWidth}
+          "
+          fill="${escapeHtml(fill)}"
+        ></polygon>
+      `;
+    })
+    .join('');
+}
+
 function renderTrail(asset, instance, layer, progress) {
   const falloff = layer.falloff ?? 0.1;
   const trailStyle = layer.style ?? 'fill';
   let svg = '';
+
+  if (trailStyle === 'stretchedSquare') {
+    return renderStretchedSquareTrail(asset, instance, layer, progress);
+  }
 
   for (let index = 0; index < layer.segments; index += 1) {
     const segmentProgress = Math.max(0, progress - index * layer.spacing);
@@ -5900,13 +6040,15 @@ function renderTrailInspectorFields(layer, trailStyle) {
             field: 'spriteId',
             datasetName: 'layer-field',
           })
-        : renderColorField({
-            label: 'Base Color',
-            value: layer.color,
-            field: 'color',
-            datasetName: 'layer-field',
-            fallback: '#ffffff',
-          })
+        : trailStyle === 'stretchedSquare'
+          ? ''
+          : renderColorField({
+              label: 'Base Color',
+              value: layer.color,
+              field: 'color',
+              datasetName: 'layer-field',
+              fallback: '#ffffff',
+            })
     }
 
     ${
@@ -5919,22 +6061,61 @@ function renderTrailInspectorFields(layer, trailStyle) {
         : ''
     }
 
-    <div class="field-grid two-up">
-      <label class="field">
-        <span class="field-label">Segments</span>
-        <input class="field-input" type="number" step="1" min="1" value="${layer.segments}" data-layer-field="segments" />
-      </label>
+    ${
+      trailStyle === 'stretchedSquare'
+        ? `
+      <div class="field-grid two-up">
+        <label class="field">
+          <span class="field-label">Trail Length</span>
+          <input class="field-input" type="number" step="0.01" min="0.01" value="${layer.trailLength ?? 0.22}" data-layer-field="trailLength" />
+        </label>
 
-      <label class="field">
-        <span class="field-label">Spacing</span>
-        <input class="field-input" type="number" step="0.01" value="${layer.spacing}" data-layer-field="spacing" />
-      </label>
+        <label class="field">
+          <span class="field-label">Start Width</span>
+          <input class="field-input" type="number" step="0.1" min="0.5" value="${layer.startWidth ?? 28}" data-layer-field="startWidth" />
+        </label>
 
-      <label class="field">
-        <span class="field-label">Falloff</span>
-        <input class="field-input" type="number" step="0.01" value="${layer.falloff ?? 0.1}" data-layer-field="falloff" />
-      </label>
-    </div>
+        <label class="field">
+          <span class="field-label">End Width</span>
+          <input class="field-input" type="number" step="0.1" min="0.5" value="${layer.endWidth ?? 8}" data-layer-field="endWidth" />
+        </label>
+      </div>
+
+      ${renderColorField({
+        label: 'Start Color',
+        value: layer.startColor ?? layer.color ?? 'rgba(255, 140, 60, 0.72)',
+        field: 'startColor',
+        datasetName: 'layer-field',
+        fallback: '#ff8844',
+      })}
+
+      ${renderColorField({
+        label: 'End Color',
+        value: layer.endColor ?? toTransparentColor(layer.startColor ?? layer.color ?? '#ff8844'),
+        field: 'endColor',
+        datasetName: 'layer-field',
+        fallback: '#ff8844',
+      })}
+    `
+        : `
+      <div class="field-grid two-up">
+        <label class="field">
+          <span class="field-label">Segments</span>
+          <input class="field-input" type="number" step="1" min="1" value="${layer.segments}" data-layer-field="segments" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Spacing</span>
+          <input class="field-input" type="number" step="0.01" value="${layer.spacing}" data-layer-field="spacing" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Falloff</span>
+          <input class="field-input" type="number" step="0.01" value="${layer.falloff ?? 0.1}" data-layer-field="falloff" />
+        </label>
+      </div>
+    `
+    }
 
     ${
       trailStyle === 'fill' || trailStyle === 'ring'
@@ -6063,7 +6244,11 @@ function renderTrailInspectorFields(layer, trailStyle) {
         : ''
     }
 
-    <p class="section-note">Trail style can reuse the existing primitive shapes while still following the effect motion.</p>
+    <p class="section-note">${
+      trailStyle === 'stretchedSquare'
+        ? 'Stretched Square uses a continuous trail strip. Opacity over lifetime still comes from the layer curves panel below.'
+        : 'Trail style can reuse the existing primitive shapes while still following the effect motion.'
+    }</p>
   `;
 }
 
@@ -7500,10 +7685,13 @@ function updateSelectedLayerField(field, rawValue, fromColorPicker = false) {
       'radius',
       'glowScale',
       'thickness',
+      'trailLength',
       'spacing',
       'falloff',
       'width',
       'height',
+      'startWidth',
+      'endWidth',
       'rotationDeg',
       'sweepDeg',
       'innerRadius',
@@ -7545,7 +7733,7 @@ function updateSelectedLayerField(field, rawValue, fromColorPicker = false) {
     }
   } else if (field === 'segments' || field === 'points' || field === 'maxParticles') {
     layer[field] = Math.max(field === 'points' ? 3 : 1, Math.round(Number(rawValue) || 1));
-  } else if (field === 'color' || field === 'color2' || field === 'glowColor' || field === 'tintColor' || field === 'tintColor2') {
+  } else if (field === 'color' || field === 'color2' || field === 'glowColor' || field === 'tintColor' || field === 'tintColor2' || field === 'startColor' || field === 'endColor') {
     const currentValue = layer[field] ?? (field === 'glowColor' ? layer.color : '#ffffff');
     layer[field] = fromColorPicker ? mergePickedHexWithSource(currentValue, rawValue) : rawValue;
   } else if (field === 'style') {
@@ -7561,6 +7749,10 @@ function updateSelectedLayerField(field, rawValue, fromColorPicker = false) {
     layer.alignToMotionDirection = Boolean(rawValue);
   } else {
     layer[field] = rawValue;
+  }
+
+  if (field === 'startColor' && layer.type === 'trail' && layer.style === 'stretchedSquare') {
+    layer.color = layer.startColor;
   }
 
   if (field === 'id') {
@@ -7583,7 +7775,7 @@ function updateSelectedLayerField(field, rawValue, fromColorPicker = false) {
 
   commitAsset(nextAsset);
 
-  if (field === 'color') {
+  if (field === 'color' || field === 'startColor' || field === 'endColor') {
     renderLayersPanel();
   }
 }

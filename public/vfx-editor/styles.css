@@ -416,6 +416,26 @@ h3 {
 
 .effect-collection-list-panel,
 .effect-collection-detail-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.effect-collection-list-panel {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.effect-collection-detail-panel {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.effect-collection-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.effect-collection-detail {
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
@@ -425,8 +445,15 @@ h3 {
 .effect-collection-list {
   display: grid;
   gap: 8px;
-  grid-auto-flow: row dense;
   align-content: start;
+}
+
+.effect-collection-list {
+  grid-auto-flow: row dense;
+}
+
+.effect-collection-detail-panel > .effect-collection-empty {
+  align-self: start;
 }
 
 .effect-collection-item {
